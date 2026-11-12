@@ -3,6 +3,9 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "nuxt typecheck",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -15,5 +18,11 @@
     "pinia": "^4.1.0",
     "vue": "^3.5.45",
     "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "prettier": "3.10.0",
+    "sass": "^1.108.2",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.14"
   }
 }
