@@ -6,7 +6,7 @@
       <span class="app-backdrop__circle" />
     </div>
 
-    <header class="app-header">
+    <header class="app-header container">
       <NuxtLink class="app-brand" to="/">
         <svg
           class="app-brand__icon"
@@ -22,23 +22,28 @@
       <ThemeToggleButton />
     </header>
 
-    <main class="app-main">
-      <NuxtPage />
+    <main
+      class="app-main container"
+      :class="{ 'app-main--slide-right': currentRoute.path === '/' }"
+    >
+      <NuxtPage :transition="{ name: 'notes-slide', mode: 'out-in' }" />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-  import ThemeToggleButton from '~/components/UI/buttons/ThemeToggleButton.vue'
+  import { ThemeToggleButton } from '~/components/UI/buttons/ThemeToggleButton'
+
+  const { currentRoute } = useRouter()
 </script>
 
 <style scoped lang="scss">
   .app-shell {
     position: relative;
     min-height: 100vh;
-    min-height: 100svh;
     padding: 40px;
     isolation: isolate;
+    overflow-x: clip;
   }
 
   .app-backdrop {
@@ -75,8 +80,12 @@
   .app-main {
     position: relative;
     z-index: 1;
-    max-width: 1040px;
-    margin-inline: auto;
+  }
+
+  .app-main--slide-right {
+    --notes-slide-leave-x: 400px;
+    --notes-slide-enter-x: -38px;
+    --notes-slide-origin: top right;
   }
 
   .app-header {

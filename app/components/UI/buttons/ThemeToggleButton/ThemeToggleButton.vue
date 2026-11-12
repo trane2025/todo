@@ -35,19 +35,9 @@
 </template>
 
 <script setup lang="ts">
-  type Theme = 'light' | 'dark'
+  import { useTheme } from './useTheme'
 
-  const theme = ref<Theme>('light')
-
-  const toggleTheme = () => {
-    theme.value = theme.value === 'light' ? 'dark' : 'light'
-  }
-
-  useHead(() => ({
-    htmlAttrs: {
-      'data-theme': theme.value,
-    },
-  }))
+  const { theme, toggleTheme } = useTheme()
 </script>
 
 <style scoped lang="scss">
@@ -65,9 +55,10 @@
     background: var(--color-surface);
     color: var(--color-link);
     cursor: pointer;
+    transition: box-shadow 0.2s ease;
 
     &:hover {
-      border-color: var(--color-link);
+      box-shadow: var(--color-shadow) -3px 11px 41px -5px;
     }
 
     &__thumb {
