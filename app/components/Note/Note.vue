@@ -20,13 +20,17 @@
         />
         <span class="note-card__task-text">{{ task.text }}</span>
       </li>
-      <NuxtLink :to="`/notes/${note.id}`">Редактировать</NuxtLink>
+      <NuxtLink class="note-card__edit" :to="`/notes/${note.id}`">
+        <EditIcon />
+        Редактировать
+      </NuxtLink>
     </ul>
   </li>
 </template>
 
 <script setup lang="ts">
   import BaseCheckbox from '~/components/UI/checkboxes/BaseCheckbox.vue'
+  import { EditIcon } from '~/components/UI/icons'
   import type { Note } from './Note'
 
   defineProps<{ note: Note }>()
@@ -72,6 +76,22 @@
     &__task--done &__task-text {
       color: var(--color-muted);
       text-decoration: line-through;
+    }
+
+    &__edit {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      svg {
+        flex: none;
+        inline-size: 20px;
+        block-size: 20px;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
     }
   }
 

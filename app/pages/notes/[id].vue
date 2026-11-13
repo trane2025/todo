@@ -1,9 +1,7 @@
 <template>
   <section class="editor-page">
     <NuxtLink class="back-link" to="/">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M19 12H5m6-6-6 6 6 6" />
-      </svg>
+      <LeftIcon />
       К заметкам
     </NuxtLink>
 
@@ -23,9 +21,7 @@
           aria-label="Отменить изменение"
           disabled
         >
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="m9 5-5 5 5 5M4 10h10a4 4 0 0 1 0 8h-2" />
-          </svg>
+          <LeftIcon />
         </BaseButton>
         <BaseButton
           class="editor-panel__history-button"
@@ -33,9 +29,7 @@
           aria-label="Повторить изменение"
           disabled
         >
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="m15 5 5 5-5 5m5-5H10a4 4 0 0 0 0 8h2" />
-          </svg>
+          <RightIcon />
         </BaseButton>
       </div>
 
@@ -66,17 +60,13 @@
                 :aria-label="`Удалить задачу ${taskIndex + 1}`"
                 disabled
               >
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v6m4-6v6" />
-                </svg>
+                <TrashIcon />
               </BaseButton>
             </li>
           </ul>
 
           <BaseButton class="editor-form__add-task" disabled>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <PlusIcon />
             Добавить пункт
           </BaseButton>
         </div>
@@ -102,6 +92,7 @@
   import type { NoteItem } from '~/components/Note'
   import BaseButton from '~/components/UI/buttons/BaseButton.vue'
   import BaseCheckbox from '~/components/UI/checkboxes/BaseCheckbox.vue'
+  import { LeftIcon, PlusIcon, RightIcon, TrashIcon } from '~/components/UI/icons'
   import BaseInput from '~/components/UI/inputs/BaseInput.vue'
 
   const route = useRoute()

@@ -4,9 +4,7 @@
       <h1 class="page-title">Мои заметки</h1>
 
       <NuxtLink class="create-note" to="/notes/new">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
+        <PlusIcon />
         Создать заметку
       </NuxtLink>
     </div>
@@ -19,6 +17,7 @@
 
 <script setup lang="ts">
   import { Note, type NoteData } from '~/components/Note'
+  import { PlusIcon } from '~/components/UI/icons'
 
   const notes: NoteData[] = [
     {

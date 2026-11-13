@@ -8,15 +8,7 @@
 
     <header class="app-header container">
       <NuxtLink class="app-brand" to="/">
-        <svg
-          class="app-brand__icon"
-          viewBox="0 0 32 40"
-          fill="none"
-          aria-hidden="true"
-        >
-          <rect x="3" y="3" width="26" height="34" rx="7" />
-          <path d="M10 13h12M10 20h12M10 27h7" />
-        </svg>
+        <LogoIcon class="app-brand__icon" />
         <span>Заметки</span>
       </NuxtLink>
       <ThemeToggleButton />
@@ -33,6 +25,7 @@
 
 <script setup lang="ts">
   import { ThemeToggleButton } from '~/components/UI/buttons/ThemeToggleButton'
+  import { LogoIcon } from '~/components/UI/icons'
 
   const { currentRoute } = useRouter()
 </script>
