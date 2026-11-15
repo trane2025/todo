@@ -19,7 +19,8 @@
           class="editor-panel__history-button"
           variant="secondary"
           aria-label="Отменить изменение"
-          disabled
+          @click="runHistory(undo)"
+          :disabled="disabledUndo && !pendingText"
         >
           <LeftIcon />
         </BaseButton>
@@ -27,29 +28,36 @@
           class="editor-panel__history-button"
           variant="secondary"
           aria-label="Повторить изменение"
-          disabled
+          @click="runHistory(redo)"
+          :disabled="disabledRedo || pendingText"
         >
           <RightIcon />
         </BaseButton>
       </div>
 
-      <form class="editor-form" @submit.prevent>
-        <BaseInput v-model:value="title" label="Название заметки" />
+      <form class="editor-form" @submit.prevent @focusout="commitText">
+        <BaseInput
+          :value="current.title"
+          label="Название заметки"
+          @update:value="editText(current, 'title', $event)"
+        />
 
         <div class="editor-form__task-section">
           <h2 class="editor-form__task-heading">Список задач</h2>
-          <ul v-if="tasks.length" class="editor-form__tasks" role="list">
+          <ul v-if="current.tasks.length" class="editor-form__tasks" role="list">
             <li
-              v-for="(task, taskIndex) in tasks"
+              v-for="(task, taskIndex) in current.tasks"
               :key="task.id"
               class="editor-form__task"
             >
               <BaseCheckbox
-                v-model:checked="task.isDone"
+                :checked="task.isDone"
+                @update:checked="changeTaskDone(task, $event)"
                 :label="`Выполнение задачи ${taskIndex + 1}`"
               />
               <BaseInput
-                v-model:value="task.text"
+                :value="task.text"
+                @update:value="editText(task, 'text', $event)"
                 :label="`Текст задачи ${taskIndex + 1}`"
                 :class="{ 'editor-form__task-field--done': task.isDone }"
                 hide-label
@@ -58,14 +66,14 @@
                 class="editor-form__remove-task"
                 variant="danger"
                 :aria-label="`Удалить задачу ${taskIndex + 1}`"
-                disabled
+                @click="removeTask(task)"
               >
                 <TrashIcon />
               </BaseButton>
             </li>
           </ul>
 
-          <BaseButton class="editor-form__add-task" disabled>
+          <BaseButton class="editor-form__add-task" @click="addTask">
             <PlusIcon />
             Добавить пункт
           </BaseButton>
@@ -89,23 +97,117 @@
 </template>
 
 <script setup lang="ts">
-  import type { NoteItem } from '~/components/Note'
+  import type { NoteData, NoteItem } from '~/components/Note'
   import BaseButton from '~/components/UI/buttons/BaseButton.vue'
   import BaseCheckbox from '~/components/UI/checkboxes/BaseCheckbox.vue'
   import { LeftIcon, PlusIcon, RightIcon, TrashIcon } from '~/components/UI/icons'
   import BaseInput from '~/components/UI/inputs/BaseInput.vue'
+  import { useUndoRedo } from '~/composables/useUndoRedo'
 
   const route = useRoute()
   const isNew = route.params.id === 'new'
-  const title = ref(isNew ? '' : 'Подготовка к интервью')
-  const tasks = ref<NoteItem[]>(
-    isNew
-      ? []
-      : [
-          { id: 'task-1', text: 'Повторить Vue', isDone: true },
-          { id: 'task-2', text: 'Продумать историю', isDone: false },
-          { id: 'task-3', text: 'Проверить Docker', isDone: false },
-        ],
+  const { current, change, record, undo, redo, disabledUndo, disabledRedo } =
+    useUndoRedo<NoteData>({
+      id: route.params.id as string,
+      title: isNew ? '' : 'Подготовка к интервью',
+      tasks: isNew
+        ? []
+        : [
+            { id: 'task-1', text: 'Повторить Vue', isDone: true },
+            { id: 'task-2', text: 'Продумать историю', isDone: false },
+            { id: 'task-3', text: 'Проверить Docker', isDone: false },
+          ],
+    })
+
+  const textEdit = ref<{
+    target: object
+    original: string
+    read: () => string
+    write: (text: string) => void
+  }>()
+
+  const pendingText = computed(
+    () => textEdit.value?.read() !== textEdit.value?.original,
+  )
+
+  const commitText = () => {
+    const edit = textEdit.value
+    textEdit.value = undefined
+    if (!edit) return
+
+    const { read, write, original } = edit
+    const text = read()
+    if (text === original) return
+
+    record({
+      undo: () => write(original),
+      redo: () => write(text),
+    })
+  }
+
+  const editText = <Field extends 'title' | 'text'>(
+    target: Record<Field, string>,
+    key: Field,
+    text: string,
+  ) => {
+    if (textEdit.value?.target !== target) {
+      commitText()
+      textEdit.value = {
+        target,
+        original: target[key],
+        read: () => target[key],
+        write: (value) => (target[key] = value),
+      }
+    }
+    target[key] = text
+  }
+
+  const addTask = () => {
+    const task = { id: crypto.randomUUID(), text: '', isDone: false }
+    commitText()
+    change({
+      undo: (note) => note.tasks.pop(),
+      redo: (note) => note.tasks.push(task),
+    })
+  }
+
+  const removeTask = (task: NoteItem) => {
+    const index = current.value.tasks.indexOf(task)
+    if (index === -1) return
+    commitText()
+    change({
+      undo: (note) => note.tasks.splice(index, 0, task),
+      redo: (note) => note.tasks.splice(index, 1),
+    })
+  }
+
+  const changeTaskDone = (task: NoteItem, checked: boolean) => {
+    const { isDone } = task
+    if (checked === isDone) return
+    commitText()
+    change({
+      undo: () => (task.isDone = isDone),
+      redo: () => (task.isDone = checked),
+    })
+  }
+
+  const runHistory = (action: () => void) => {
+    commitText()
+    action()
+  }
+
+  const handleHistoryKey = (event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.isComposing || event.altKey) return
+    if (!event.ctrlKey && !event.metaKey) return
+    if (event.key.toLowerCase() !== 'z' && event.code !== 'KeyZ') return
+
+    event.preventDefault()
+    runHistory(event.shiftKey ? redo : undo)
+  }
+
+  onMounted(() => window.addEventListener('keydown', handleHistoryKey))
+  onBeforeUnmount(() =>
+    window.removeEventListener('keydown', handleHistoryKey),
   )
 </script>
 
