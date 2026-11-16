@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ThemeToggleButton } from '~/components/UI/buttons/ThemeToggleButton';
+  import ThemeToggleButton from '~/components/UI/buttons/ThemeToggleButton.vue';
   import { LogoIcon } from '~/components/UI/icons';
 
   const { currentRoute } = useRouter();

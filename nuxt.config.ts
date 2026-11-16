@@ -1,5 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { themeStorageKey } from './app/components/UI/buttons/ThemeToggleButton/theme'
+import { themeStorageKey } from './shared/theme';
 
 export default defineNuxtConfig({
   modules: ['@pinia/nuxt'],
@@ -24,4 +24,4 @@ export default defineNuxtConfig({
     strict: true,
     typeCheck: true,
   },
-})
+});

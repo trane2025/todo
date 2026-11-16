@@ -28,10 +28,10 @@
 </template>
 
 <script setup lang="ts">
-  import { MoonIcon, SunIcon } from '~/components/UI/icons'
-  import { useTheme } from './useTheme'
+  import { MoonIcon, SunIcon } from '~/components/UI/icons';
+  import { useTheme } from '~/composables/useTheme';
 
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme } = useTheme();
 </script>
 
 <style scoped lang="scss">
