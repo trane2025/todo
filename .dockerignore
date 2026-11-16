@@ -1,0 +1,13 @@
+.git
+AGENTS.md
+node_modules
+.nuxt
+.output
+.nitro
+.data
+.cache
+dist
+.env
+.env.*
+*.log
+.DS_Store
