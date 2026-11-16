@@ -1,86 +1,40 @@
-# Nuxt Minimal Starter
+# Todo App (Nuxt 4)
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+[![Nuxt](https://img.shields.io/badge/Nuxt-4.x-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com/)
+[![Vue](https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![Pinia](https://img.shields.io/badge/Pinia-State_Management-FFD859?logo=pinia&logoColor=black)](https://pinia.vuejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Запуск через Docker
+**Todo App** — это современное приложение для управления задачами, разработанное на Nuxt 4 с использованием Pinia для управления состоянием и поддержкой темной/светлой темы.
 
-Запустите Docker и выполните из корня репозитория:
+---
 
-```bash
-docker-compose up
-```
+## 🚀 Живая демонстрация
 
-После сборки откройте [http://localhost:3000](http://localhost:3000).
-Если Compose установлен как плагин Docker CLI, используйте `docker compose up`.
+Посмотреть работающее приложение можно здесь:
+👉 **[https://trane2025.github.io/todo/](https://trane2025.github.io/todo/)**
 
-## Setup
+> *Примечание: Демо-версия собрана как статический сайт (SSG) и размещена на GitHub Pages.*
 
-Make sure to install dependencies:
+---
 
-```bash
-# npm
-npm install
+## 🛠️ Технологический стек
 
-# pnpm
-pnpm install
+- **Фреймворк:** [Nuxt 4](https://nuxt.com/) (Vue 3)
+- **Управление состоянием:** [Pinia](https://pinia.vuejs.org/)
+- **Стилизация:** CSS / Scoped Styles
+- **Деплой:** GitHub Pages (через GitHub Actions)
+- **Контейнеризация:** Docker & Docker Compose
 
-# yarn
-yarn install
+---
 
-# bun
-bun install
-```
+## 📦 Установка и запуск
 
-## Development Server
+### Вариант 1: Локальный запуск (Node.js)
 
-Start the development server on `http://localhost:3000`:
+Убедитесь, что у вас установлен Node.js (рекомендуется v24 или выше).
 
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+1. **Клонируйте репозиторий:**
+   ```bash
+   git clone https://github.com/trane2025/todo.git
+   cd todo
