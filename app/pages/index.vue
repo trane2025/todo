@@ -99,6 +99,7 @@
     border: 1px solid var(--color-border);
     border-radius: 28px;
     background: var(--color-surface);
+    box-shadow: var(--color-shadow) 10px 10px 100px -37px;
 
     &__illustration {
       justify-self: center;

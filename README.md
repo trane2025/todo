@@ -2,6 +2,17 @@
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
+## Запуск через Docker
+
+Запустите Docker и выполните из корня репозитория:
+
+```bash
+docker-compose up
+```
+
+После сборки откройте [http://localhost:3000](http://localhost:3000).
+Если Compose установлен как плагин Docker CLI, используйте `docker compose up`.
+
 ## Setup
 
 Make sure to install dependencies:

@@ -63,7 +63,7 @@
 
 <style scoped lang="scss">
   .confirm-dialog {
-    inline-size: min(420px, calc(100% - 32px));
+    inline-size: min(450px, calc(100% - 32px));
     max-block-size: calc(100dvh - 32px);
     margin: auto;
     padding: clamp(20px, 5vw, 32px);
