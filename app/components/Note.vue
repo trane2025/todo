@@ -18,7 +18,7 @@
       role="list"
     >
       <li
-        v-for="task in note.tasks.slice(0, 3)"
+        v-for="task in note.tasks.slice(0, 5)"
         :key="task.id"
         class="note-card__task"
         :class="{ 'note-card__task--done': task.isDone }"

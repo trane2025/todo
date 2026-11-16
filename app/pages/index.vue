@@ -10,6 +10,7 @@
   const heading = useTemplateRef<HTMLHeadingElement>('heading');
   const noteToDelete = ref<NoteData>();
   const deleteError = ref(false);
+  const previousCardBounds = new Map<Element, DOMRect>();
 
   const deleteSelectedNote = async () => {
     const note = noteToDelete.value;
@@ -18,7 +19,48 @@
     deleteError.value = !store.deleteNote(note.id);
     noteToDelete.value = undefined;
     await nextTick();
-    heading.value?.focus();
+    heading.value?.focus({ preventScroll: true });
+  };
+
+  const prepareNoteLeave = (element: Element) => {
+    if (!(element instanceof HTMLElement)) return;
+    element.inert = true;
+
+    const list = element.parentElement;
+    if (
+      !list ||
+      !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+    )
+      return;
+
+    const listBounds = list.getBoundingClientRect();
+    if (!previousCardBounds.size) {
+      // Measure the entire grid before the first removed card leaves its slot.
+      for (const card of list.children) {
+        previousCardBounds.set(card, card.getBoundingClientRect());
+      }
+      if (!store.notes.length) {
+        list.style.setProperty(
+          '--notes-list-leave-height',
+          `${listBounds.height}px`,
+        );
+      }
+      queueMicrotask(() => previousCardBounds.clear());
+    }
+
+    const bounds = previousCardBounds.get(element);
+    if (!bounds) return;
+
+    element.style.setProperty(
+      '--note-leave-x',
+      `${bounds.left - listBounds.left}px`,
+    );
+    element.style.setProperty(
+      '--note-leave-y',
+      `${bounds.top - listBounds.top}px`,
+    );
+    element.style.setProperty('--note-leave-width', `${bounds.width}px`);
+    element.style.setProperty('--note-leave-height', `${bounds.height}px`);
   };
 </script>
 
@@ -27,7 +69,7 @@
     <div class="notes-page__toolbar">
       <h1 ref="heading" class="page-title" tabindex="-1">Мои заметки</h1>
 
-      <NuxtLink v-if="store.notes.length" class="create-note" to="/notes/new">
+      <NuxtLink class="create-note notes-page__create" to="/notes/new">
         <PlusIcon />
         Создать заметку
       </NuxtLink>
@@ -37,16 +79,27 @@
       Не удалось удалить заметку из хранилища браузера.
     </p>
 
-    <ul v-if="store.notes.length" class="notes-list" role="list">
+    <TransitionGroup
+      tag="ul"
+      name="note-zoom"
+      type="animation"
+      class="notes-list"
+      role="list"
+      @before-leave="prepareNoteLeave"
+    >
       <Note
         v-for="note in store.notes"
         :key="note.id"
         :note="note"
         @delete="noteToDelete = note"
       />
-    </ul>
+    </TransitionGroup>
 
-    <section v-else class="empty-notes" aria-labelledby="empty-notes-title">
+    <section
+      v-if="!store.notes.length"
+      class="empty-notes"
+      aria-labelledby="empty-notes-title"
+    >
       <EmptyNotesIllustration class="empty-notes__illustration" />
 
       <div class="empty-notes__content">
@@ -73,8 +126,12 @@
 
 <style scoped lang="scss">
   .notes-list {
+    --note-zoom-duration: 220ms;
+
+    position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr;
+    align-items: start;
     gap: 24px;
   }
 
@@ -88,6 +145,50 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+  }
+
+  .notes-page:has(> .notes-list:empty) .notes-page__create,
+  .notes-list:empty,
+  .notes-list:not(:empty) + .empty-notes {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .notes-list:has(+ .empty-notes) {
+      min-block-size: var(--notes-list-leave-height, 0px);
+    }
+
+    .notes-list > .note-zoom-leave-active {
+      position: absolute;
+      top: var(--note-leave-y);
+      left: var(--note-leave-x);
+      z-index: 1;
+      inline-size: var(--note-leave-width);
+      block-size: var(--note-leave-height);
+      animation: note-zoom-out var(--note-zoom-duration)
+        cubic-bezier(0.4, 0, 0.64, 1) both;
+    }
+
+    .note-zoom-move:not(.note-zoom-leave-active) {
+      transition: transform 300ms cubic-bezier(0.25, 0.8, 0.25, 1)
+        var(--note-zoom-duration);
+    }
+
+    @keyframes note-zoom-out {
+      0% {
+        scale: 1;
+        opacity: 1;
+      }
+
+      45% {
+        opacity: 1;
+      }
+
+      100% {
+        scale: 0.12;
+        opacity: 0;
+      }
+    }
   }
 
   .empty-notes {
