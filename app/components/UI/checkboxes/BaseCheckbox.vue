@@ -7,49 +7,37 @@
   >
     <input
       v-if="!readOnly"
+      v-model="checked"
       class="base-checkbox__input"
       type="checkbox"
-      :checked="checked"
       :disabled="disabled"
       :aria-label="label"
-      @change="handleChange"
     />
     <span class="base-checkbox__mark" aria-hidden="true"></span>
   </span>
 </template>
 
 <script setup lang="ts">
-  const props = defineProps<{
-    checked: boolean
-    label: string
-    readOnly?: boolean
-    disabled?: boolean
-  }>()
+  defineProps<{
+    label: string;
+    readOnly?: boolean;
+    disabled?: boolean;
+  }>();
 
-  const emit = defineEmits<{
-    'update:checked': [checked: boolean]
-  }>()
-
-  function handleChange(event: Event) {
-    const input = event.currentTarget as HTMLInputElement
-    const nextChecked = input.checked
-    // Родитель подтверждает новое состояние, обновляя prop checked.
-    input.checked = props.checked
-    emit('update:checked', nextChecked)
-  }
+  const checked = defineModel<boolean>('checked', { required: true });
 </script>
 
 <style scoped lang="scss">
   .base-checkbox {
     position: relative;
-    display: inline-grid;
-    inline-size: 34px;
-    block-size: 24px;
+    display: grid;
+    inline-size: 28px;
+    block-size: 20px;
 
     &__mark {
       display: grid;
       place-items: center;
-      border: 3px solid var(--checkbox-border-color, var(--color-link));
+      border: 2px solid var(--checkbox-border-color, var(--color-link));
       border-radius: 8px;
       pointer-events: none;
     }

@@ -20,6 +20,12 @@ body {
   line-height: 1.5;
 }
 
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-placeholder);
+  opacity: 1;
+}
 .container {
   max-inline-size: 1040px;
   margin-inline: auto;
@@ -48,15 +54,16 @@ a {
 :root {
   --color-bg: #ecebff;
   --color-surface: #ffffff;
-  --color-text: #241c53;
+  --color-text: #4b3c9e;
   --color-muted: #756d9e;
   --color-primary: #5731f5;
   --color-on-primary: #ffffff;
   --color-link: #5426ec;
-  --color-border: #c9bcff;
+  --color-border: #e1daff;
   --color-decoration: #b9caff;
   --color-decoration-secondary: #8a2a92;
   --color-shadow: #5426ec;
+  --color-placeholder: #bcb1d9;
 
   color-scheme: light;
 }
@@ -69,12 +76,20 @@ a {
   --color-primary: #8650e6;
   --color-on-primary: #ffffff;
   --color-link: #c5a2ff;
-  --color-border: #8c78b5;
+  --color-border: #716092;
   --color-decoration: #3b365f;
   --color-decoration-secondary: #39345c;
   --color-shadow: #8b75eb;
+  --color-placeholder: #625b89;
 
   color-scheme: dark;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-placeholder);
+  font-size: 1rem;
+  letter-spacing: .05rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {

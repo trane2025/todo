@@ -37,6 +37,28 @@
     overflow-x: clip;
   }
 
+  .app-shell:has(.editor-page) {
+    display: flex;
+    flex-direction: column;
+    block-size: 100dvh;
+    min-block-size: min-content;
+
+    .app-header,
+    .app-main {
+      inline-size: 100%;
+    }
+
+    .app-header {
+      flex: none;
+    }
+
+    .app-main {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+    }
+  }
+
   .app-backdrop {
     position: absolute;
     z-index: 0;

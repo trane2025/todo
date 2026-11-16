@@ -6,14 +6,14 @@
 
 <script setup lang="ts">
   interface Props {
-    type?: 'button' | 'submit'
-    variant?: 'primary' | 'secondary' | 'danger'
+    type?: 'button' | 'submit';
+    variant?: 'primary' | 'secondary' | 'danger';
   }
 
   withDefaults(defineProps<Props>(), {
     type: 'button',
     variant: 'primary',
-  })
+  });
 </script>
 
 <style scoped lang="scss">
@@ -33,6 +33,10 @@
     text-align: center;
     overflow-wrap: anywhere;
     cursor: pointer;
+    transition:
+      opacity 0.15s,
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out;
 
     &--primary {
       background: var(--color-primary);
@@ -46,8 +50,8 @@
     }
 
     &--danger {
-      background: #ffd1e8;
-      color: #94104d;
+      background: #e33f91;
+      color: #ffffff;
     }
 
     &:enabled:hover {
@@ -59,7 +63,7 @@
     }
 
     &:disabled {
-      opacity: 0.55;
+      opacity: 0.35;
       cursor: default;
     }
 

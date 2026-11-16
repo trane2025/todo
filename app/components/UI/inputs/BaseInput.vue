@@ -1,12 +1,13 @@
 <script setup lang="ts">
   interface Props {
-    label: string
-    hideLabel?: boolean
+    label: string;
+    hideLabel?: boolean;
+    placeholder?: string;
   }
 
-  const props = defineProps<Props>()
-  const value = defineModel<string>('value', { required: true })
-  const inputId = useId()
+  const props = defineProps<Props>();
+  const value = defineModel<string>({ required: true });
+  const inputId = useId();
 </script>
 
 <template>
@@ -19,6 +20,7 @@
       {{ props.label }}
     </label>
     <input
+      :placeholder="props.placeholder"
       :id="inputId"
       v-model="value"
       class="base-input__field"
@@ -67,8 +69,7 @@
     text-decoration: var(--input-text-decoration, none);
 
     &:focus {
-      border-color: var(--color-link);
-      outline: 2px solid transparent;
+      outline: 1px solid transparent;
       box-shadow: 0 0 0 3px
         color-mix(in srgb, var(--color-link) 10%, transparent);
     }

@@ -158,93 +158,102 @@
 
 <template>
   <section class="editor-page">
-    <NuxtLink class="back-link" to="/">
-      <LeftIcon />
-      К заметкам
-    </NuxtLink>
-
-    <h1 class="page-title">
-      {{ isNew ? 'Новая заметка' : 'Редактирование заметки' }}
-    </h1>
-
     <div v-if="canEdit" class="editor-panel">
-      <div
-        class="editor-panel__history"
-        role="group"
-        aria-label="История изменений"
-      >
-        <BaseButton
-          class="editor-panel__history-button"
-          variant="secondary"
-          aria-label="Отменить изменение"
-          @click="runHistory(undo)"
-          :disabled="disabledUndo && !pendingText"
+      <div class="editor-panel__header">
+        <h1 class="page-title">
+          {{ isNew ? 'Новая заметка' : 'Редактирование заметки' }}
+        </h1>
+        <div
+          class="editor-panel__history"
+          role="group"
+          aria-label="История изменений"
         >
-          <LeftIcon />
-        </BaseButton>
-        <BaseButton
-          class="editor-panel__history-button"
-          variant="secondary"
-          aria-label="Повторить изменение"
-          @click="runHistory(redo)"
-          :disabled="disabledRedo || pendingText"
-        >
-          <RightIcon />
-        </BaseButton>
+          <BaseButton
+            @click="runHistory(undo)"
+            :disabled="disabledUndo && !pendingText"
+            class="editor-panel__history-button"
+            variant="secondary"
+            aria-label="Отменить изменение"
+          >
+            <LeftIcon />
+          </BaseButton>
+          <BaseButton
+            @click="runHistory(redo)"
+            :disabled="disabledRedo || pendingText"
+            class="editor-panel__history-button"
+            variant="secondary"
+            aria-label="Повторить изменение"
+          >
+            <RightIcon />
+          </BaseButton>
+        </div>
       </div>
-
       <form class="editor-form" @submit.prevent="submit" @focusout="commitText">
         <BaseInput
-          :value="current.title"
+          :model-value="current.title"
           label="Название заметки"
-          @update:value="editText(current, 'title', $event)"
+          placeholder="НАПРИМЕР ЗАДАЧИ НА ЗАВТРА"
+          @update:model-value="editText(current, 'title', $event)"
         />
-
         <div class="editor-form__task-section">
-          <h2 class="editor-form__task-heading">Список задач</h2>
-          <ul v-if="current.tasks.length" class="editor-form__tasks" role="list">
-            <li
-              v-for="(task, taskIndex) in current.tasks"
-              :key="task.id"
-              class="editor-form__task"
+          <div class="editor-panel__task-title">
+            <h2 class="editor-form__task-heading">Список задач</h2>
+            <BaseButton @click="addTask">
+              <PlusIcon />
+              Добавить пункт
+            </BaseButton>
+          </div>
+          <div class="editor-form__task-scroll">
+            <TransitionGroup
+              tag="ul"
+              name="task-row"
+              class="editor-form__tasks"
+              role="list"
             >
-              <BaseCheckbox
-                :checked="task.isDone"
-                @update:checked="changeTaskDone(task, $event)"
-                :label="`Выполнение задачи ${taskIndex + 1}`"
-              />
-              <BaseInput
-                :value="task.text"
-                @update:value="editText(task, 'text', $event)"
-                :label="`Текст задачи ${taskIndex + 1}`"
-                :class="{ 'editor-form__task-field--done': task.isDone }"
-                hide-label
-              />
-              <BaseButton
-                class="editor-form__remove-task"
-                variant="danger"
-                :aria-label="`Удалить задачу ${taskIndex + 1}`"
-                @click="removeTask(task)"
+              <li
+                class="editor-form__task"
+                v-for="task in current.tasks"
+                :key="task.id"
               >
-                <TrashIcon />
-              </BaseButton>
-            </li>
-          </ul>
-
-          <BaseButton class="editor-form__add-task" @click="addTask">
-            <PlusIcon />
-            Добавить пункт
-          </BaseButton>
+                <div class="editor-form__task-space">
+                  <div class="editor-form__task-content">
+                    <BaseCheckbox
+                      :checked="task.isDone"
+                      label="Выполнение задачи"
+                      @update:checked="changeTaskDone(task, $event)"
+                    />
+                    <BaseInput
+                      :model-value="task.text"
+                      label="Текст задачи"
+                      placeholder="ТУТ ДОБАВЬ ОПИСАНИЕ ЗАДАЧИ"
+                      hide-label
+                      @update:model-value="editText(task, 'text', $event)"
+                    />
+                    <BaseButton
+                      class="editor-form__remove-task"
+                      variant="danger"
+                      aria-label="Удалить задачу"
+                      @click="removeTask(task)"
+                    >
+                      <TrashIcon />
+                    </BaseButton>
+                  </div>
+                </div>
+              </li>
+            </TransitionGroup>
+          </div>
         </div>
 
         <div class="editor-form__actions">
           <BaseButton type="submit">Сохранить</BaseButton>
-          <BaseButton variant="secondary" @click="confirmation = 'cancel'">Отменить</BaseButton>
+          <BaseButton @click="confirmation = 'cancel'" variant="secondary"
+            >Отменить
+          </BaseButton>
           <BaseButton
+            @click="confirmation = 'delete'"
             v-if="!isNew"
             class="editor-form__delete-note"
             variant="danger"
-            @click="confirmation = 'delete'"
           >
             Удалить заметку
           </BaseButton>
@@ -280,15 +289,35 @@
 </template>
 
 <style scoped lang="scss">
+  .editor-page,
+  .editor-panel,
+  .editor-form,
+  .editor-form__task-section {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
   .editor-panel {
     --editor-task-accent: #405fe8;
     --editor-danger-accent: #c3259b;
-
-    margin-block-start: clamp(20px, 4vw, 32px);
     padding: clamp(16px, 4vw, 36px);
     border-radius: 28px;
     background: var(--color-surface);
-    color: var(--color-text);
+
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    &__task-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
 
     svg {
       stroke: currentColor;
@@ -321,14 +350,24 @@
   }
 
   .editor-form {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
     gap: clamp(20px, 4vw, 32px);
 
-    &__task-section,
-    &__tasks {
-      display: grid;
+    &__task-section {
       gap: 12px;
+      padding: 30px 20px;
+      border: 2px dashed var(--color-border);
+      border-radius: 16px;
+    }
+
+    &__task-scroll {
+      position: relative;
+      flex: 1;
+      min-block-size: 96px;
+      min-inline-size: 0;
+      margin-inline: -14px;
+      overflow: hidden auto;
+      // Keep long lists out of the editor's minimum height.
+      contain: size;
     }
 
     &__task-heading {
@@ -341,9 +380,7 @@
 
     &__task {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      align-items: center;
-      gap: clamp(8px, 2vw, 20px);
+      grid-template-rows: 1fr;
 
       &:nth-child(3n + 2) {
         --checkbox-border-color: var(--editor-danger-accent);
@@ -354,20 +391,29 @@
       }
     }
 
-    &__task-field--done {
-      --input-text-color: var(--color-muted);
-      --input-text-decoration: line-through;
+    &__task-space {
+      min-block-size: 0;
+      min-inline-size: 0;
+    }
+
+    &__task-content {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: clamp(8px, 2vw, 10px);
+      padding: 6px 14px;
     }
 
     &__task &__remove-task {
+      inline-size: 44px;
       min-block-size: 44px;
       padding: 0;
-      background: transparent;
-      color: var(--editor-danger-accent);
-    }
+      border-radius: 12px;
 
-    &__add-task {
-      justify-self: start;
+      svg {
+        inline-size: 26px;
+        block-size: 26px;
+      }
     }
 
     &__actions {
@@ -381,27 +427,53 @@
     }
   }
 
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-    font-weight: 600;
-    text-decoration: none;
-
-    svg {
-      width: 22px;
-      height: 22px;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+  @media (prefers-reduced-motion: no-preference) {
+    .editor-form__tasks {
+      --task-toss-duration: 400ms;
+      --task-windup-duration: 120ms;
     }
 
-    &:hover {
-      text-decoration: underline;
-      text-underline-offset: 4px;
+    .task-row-enter-active {
+      transition: opacity 180ms ease-out;
+    }
+
+    .task-row-leave-active {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+      transition: grid-template-rows
+        calc(var(--task-toss-duration) - var(--task-windup-duration))
+        ease-in-out var(--task-windup-duration);
+
+      .editor-form__task-content {
+        animation: task-row-toss var(--task-toss-duration) ease-in both;
+      }
+    }
+
+    .task-row-enter-from {
+      opacity: 0;
+    }
+
+    .task-row-leave-to {
+      grid-template-rows: 0fr;
+    }
+
+    @keyframes task-row-toss {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+        animation-timing-function: ease-out;
+      }
+
+      30% {
+        opacity: 1;
+        transform: translate(-10px, 2px) rotate(-4deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(clamp(160px, 36vw, 480px), -18px) rotate(13deg);
+      }
     }
   }
 
