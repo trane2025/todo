@@ -16,8 +16,9 @@
 </template>
 
 <script setup lang="ts">
-  import { Note, type NoteData } from '~/components/Note'
+  import { Note } from '~/components/Note'
   import { PlusIcon } from '~/components/UI/icons'
+  import type { Note as NoteData } from '~/types/note'
 
   const notes: NoteData[] = [
     {

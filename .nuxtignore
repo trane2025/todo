@@ -1,1 +1,3 @@
+app/components/Note/Note.ts
+app/components/Note/index.ts
 app/components/UI/icons/index.ts

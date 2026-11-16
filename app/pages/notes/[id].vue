@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { NoteData, NoteItem } from '~/components/Note'
+  import type { Note as NoteData, NoteItem } from '~/types/note'
   import BaseButton from '~/components/UI/buttons/BaseButton.vue'
   import BaseCheckbox from '~/components/UI/checkboxes/BaseCheckbox.vue'
   import { LeftIcon, PlusIcon, RightIcon, TrashIcon } from '~/components/UI/icons'

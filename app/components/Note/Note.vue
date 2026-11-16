@@ -31,7 +31,7 @@
 <script setup lang="ts">
   import BaseCheckbox from '~/components/UI/checkboxes/BaseCheckbox.vue'
   import { EditIcon } from '~/components/UI/icons'
-  import type { Note } from './Note'
+  import type { Note } from '~/types/note'
 
   defineProps<{ note: Note }>()
 </script>
