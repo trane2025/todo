@@ -3,6 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "nuxt typecheck",
@@ -20,9 +21,11 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
+    "happy-dom": "21.0.4",
     "prettier": "3.10.0",
     "sass": "^1.108.2",
     "typescript": "^6.0.3",
+    "vitest": "5.1.0",
     "vue-tsc": "^3.3.14"
   }
 }

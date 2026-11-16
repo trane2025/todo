@@ -1,3 +1,5 @@
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 import { useLocalStorage } from '~/composables/useLocalStorage';
 import type { Note } from '~/types/note';
 import { copyNote } from '~/utils/copyNote.ts';
