@@ -135,12 +135,12 @@
 
   @media (max-width: 600px) {
     .app-shell {
-      padding: 24px 20px 40px;
+      padding: 10px 10px;
     }
 
     .app-header {
       gap: 12px;
-      margin-bottom: 36px;
+      margin-bottom: 10px;
     }
 
     .app-brand {

@@ -234,7 +234,7 @@
             <h2 class="editor-form__task-heading">Список задач</h2>
             <BaseButton @click="addTask">
               <PlusIcon />
-              Добавить пункт
+              <span class="btn-text">Добавить пункт</span>
             </BaseButton>
           </div>
           <div class="editor-form__task-scroll">
@@ -367,7 +367,6 @@
       display: flex;
       justify-content: flex-end;
       gap: 12px;
-      margin-block-end: 10px;
     }
 
     &__history &__history-button {
@@ -522,9 +521,33 @@
   }
 
   @media (max-width: 600px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .editor-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .editor-panel__task-title {
+      margin-bottom: 0;
+    }
+
+    .btn-text {
+      display: none;
+    }
+
     .editor-form__actions {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .editor-form__task-section {
+      padding: 0;
+      border: none;
     }
 
     .editor-form__delete-note {

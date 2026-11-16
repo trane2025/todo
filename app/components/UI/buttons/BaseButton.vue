@@ -77,4 +77,11 @@
   :root[data-theme='dark'] .base-button--secondary {
     background: #4c446e;
   }
+
+  @media (max-width: 600px) {
+    .base-button {
+      padding: 8px 10px;
+      min-block-size: 0;
+    }
+  }
 </style>
