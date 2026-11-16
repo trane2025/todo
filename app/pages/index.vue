@@ -1,7 +1,30 @@
+<script setup lang="ts">
+  import { Note } from '~/components/Note';
+  import ConfirmDialog from '~/components/UI/dialogs/ConfirmDialog.vue';
+  import { PlusIcon } from '~/components/UI/icons';
+  import { useNotesStore } from '~/stores/notes.ts';
+  import type { Note as NoteData } from '~/types/note';
+
+  const store = useNotesStore();
+  const heading = useTemplateRef<HTMLHeadingElement>('heading');
+  const noteToDelete = ref<NoteData>();
+  const deleteError = ref(false);
+
+  const deleteSelectedNote = async () => {
+    const note = noteToDelete.value;
+    if (!note) return;
+
+    deleteError.value = !store.deleteNote(note.id);
+    noteToDelete.value = undefined;
+    await nextTick();
+    heading.value?.focus();
+  };
+</script>
+
 <template>
   <section class="notes-page">
     <div class="notes-page__toolbar">
-      <h1 class="page-title">Мои заметки</h1>
+      <h1 ref="heading" class="page-title" tabindex="-1">Мои заметки</h1>
 
       <NuxtLink class="create-note" to="/notes/new">
         <PlusIcon />
@@ -9,58 +32,29 @@
       </NuxtLink>
     </div>
 
+    <p v-if="deleteError" role="alert">
+      Не удалось удалить заметку из хранилища браузера.
+    </p>
+
     <ul class="notes-list" role="list">
-      <Note v-for="note in notes" :key="note.id" :note="note" />
+      <Note
+        v-for="note in store.notes"
+        :key="note.id"
+        :note="note"
+        @delete="noteToDelete = note"
+      />
     </ul>
+
+    <ConfirmDialog
+      v-if="noteToDelete"
+      :message="`Удалить заметку «${noteToDelete.title}»?`"
+      confirm-label="Удалить"
+      confirm-variant="danger"
+      @confirm="deleteSelectedNote"
+      @cancel="noteToDelete = undefined"
+    />
   </section>
 </template>
-
-<script setup lang="ts">
-  import { Note } from '~/components/Note'
-  import { PlusIcon } from '~/components/UI/icons'
-  import type { Note as NoteData } from '~/types/note'
-
-  const notes: NoteData[] = [
-    {
-      id: '1',
-      title: 'Первая заметка',
-      tasks: [
-        {
-          id: 'task-1',
-          text: 'Повторить Vue',
-          isDone: false,
-        },
-      ],
-    },
-    {
-      id: '2',
-      title: 'Первая заметка',
-      tasks: [
-        {
-          id: 'task-2',
-          text: 'Повторить Vue',
-          isDone: false,
-        },
-      ],
-    },
-    {
-      id: '3',
-      title: 'Первая заметка',
-      tasks: [
-        {
-          id: 'task-3',
-          text: 'Повторить Vue',
-          isDone: true,
-        },
-        {
-          id: 'task-4',
-          text: 'Изучить Nuxt',
-          isDone: true,
-        },
-      ],
-    },
-  ]
-</script>
 
 <style scoped lang="scss">
   .notes-list {

@@ -1,3 +1,153 @@
+<script setup lang="ts">
+  import BaseButton from '~/components/UI/buttons/BaseButton.vue';
+  import BaseCheckbox from '~/components/UI/checkboxes/BaseCheckbox.vue';
+  import ConfirmDialog from '~/components/UI/dialogs/ConfirmDialog.vue';
+  import {
+    LeftIcon,
+    PlusIcon,
+    RightIcon,
+    TrashIcon,
+  } from '~/components/UI/icons';
+  import BaseInput from '~/components/UI/inputs/BaseInput.vue';
+  import { useUndoRedo } from '~/composables/useUndoRedo';
+  import { useNotesStore } from '~/stores/notes.ts';
+  import type { Note, NoteItem } from '~/types/note';
+  import { copyNote } from '~/utils/copyNote.ts';
+
+  const { params } = useRoute();
+  const id = params.id as string;
+  const isNew = id === 'new';
+  const { createNote, findById, updateNote, deleteNote } = useNotesStore();
+  const savedNote = isNew ? undefined : findById(id);
+  const canEdit = computed(() => isNew || findById(id) !== undefined);
+  const confirmation = ref<'cancel' | 'delete'>();
+  const actionError = ref('');
+  const { current, change, record, undo, redo, disabledUndo, disabledRedo } =
+    useUndoRedo<Note>(
+      savedNote ? copyNote(savedNote) : { id, title: '', tasks: [] },
+    );
+
+  const textEdit = ref<{
+    target: object;
+    original: string;
+    read: () => string;
+    write: (text: string) => void;
+  }>();
+
+  const pendingText = computed(
+    () => textEdit.value?.read() !== textEdit.value?.original,
+  );
+
+  const commitText = () => {
+    const edit = textEdit.value;
+    textEdit.value = undefined;
+    if (!edit) return;
+
+    const { read, write, original } = edit;
+    const text = read();
+    if (text === original) return;
+
+    record({
+      undo: () => write(original),
+      redo: () => write(text),
+    });
+  };
+
+  const editText = <Field extends 'title' | 'text'>(
+    target: Record<Field, string>,
+    key: Field,
+    text: string,
+  ) => {
+    if (textEdit.value?.target !== target) {
+      commitText();
+      textEdit.value = {
+        target,
+        original: target[key],
+        read: () => target[key],
+        write: (value) => (target[key] = value),
+      };
+    }
+    target[key] = text;
+  };
+
+  const addTask = () => {
+    const task = { id: crypto.randomUUID(), text: '', isDone: false };
+    commitText();
+    change({
+      undo: (note) => note.tasks.pop(),
+      redo: (note) => note.tasks.push(task),
+    });
+  };
+
+  const removeTask = (task: NoteItem) => {
+    const index = current.value.tasks.indexOf(task);
+    if (index === -1) return;
+    commitText();
+    change({
+      undo: (note) => note.tasks.splice(index, 0, task),
+      redo: (note) => note.tasks.splice(index, 1),
+    });
+  };
+
+  const changeTaskDone = (task: NoteItem, checked: boolean) => {
+    const { isDone } = task;
+    if (checked === isDone) return;
+    commitText();
+    change({
+      undo: () => (task.isDone = isDone),
+      redo: () => (task.isDone = checked),
+    });
+  };
+
+  const runHistory = (action: () => void) => {
+    commitText();
+    action();
+  };
+
+  const handleHistoryKey = (event: KeyboardEvent) => {
+    if (!canEdit.value) return;
+    if (event.defaultPrevented || event.isComposing || event.altKey) return;
+    if (!event.ctrlKey && !event.metaKey) return;
+    if (event.key.toLowerCase() !== 'z' && event.code !== 'KeyZ') return;
+
+    event.preventDefault();
+    runHistory(event.shiftKey ? redo : undo);
+  };
+
+  onMounted(() => window.addEventListener('keydown', handleHistoryKey));
+  onBeforeUnmount(() =>
+    window.removeEventListener('keydown', handleHistoryKey),
+  );
+
+  const submit = () => {
+    commitText();
+    const result = isNew
+      ? createNote({ ...current.value, id: crypto.randomUUID() })
+      : updateNote(current.value);
+    if (!result) {
+      actionError.value = 'Не удалось сохранить заметку в браузере.';
+      return;
+    }
+
+    navigateTo('/');
+  };
+
+  const cancelEditing = () => {
+    confirmation.value = undefined;
+    navigateTo('/');
+  };
+
+  const removeNote = () => {
+    confirmation.value = undefined;
+    if (!deleteNote(id)) {
+      actionError.value = 'Не удалось удалить заметку из хранилища браузера.';
+      return;
+    }
+
+    navigateTo('/');
+  };
+</script>
+
 <template>
   <section class="editor-page">
     <NuxtLink class="back-link" to="/">
@@ -9,7 +159,7 @@
       {{ isNew ? 'Новая заметка' : 'Редактирование заметки' }}
     </h1>
 
-    <div class="editor-panel">
+    <div v-if="canEdit" class="editor-panel">
       <div
         class="editor-panel__history"
         role="group"
@@ -35,7 +185,7 @@
         </BaseButton>
       </div>
 
-      <form class="editor-form" @submit.prevent @focusout="commitText">
+      <form class="editor-form" @submit.prevent="submit" @focusout="commitText">
         <BaseInput
           :value="current.title"
           label="Название заметки"
@@ -80,136 +230,38 @@
         </div>
 
         <div class="editor-form__actions">
-          <BaseButton type="submit" disabled>Сохранить</BaseButton>
-          <BaseButton variant="secondary" disabled>Отменить</BaseButton>
+          <BaseButton type="submit">Сохранить</BaseButton>
+          <BaseButton variant="secondary" @click="confirmation = 'cancel'">Отменить</BaseButton>
           <BaseButton
             v-if="!isNew"
             class="editor-form__delete-note"
             variant="danger"
-            disabled
+            @click="confirmation = 'delete'"
           >
             Удалить заметку
           </BaseButton>
         </div>
+        <p v-if="actionError" role="alert">{{ actionError }}</p>
       </form>
     </div>
+    <p v-else role="status">Заметка не найдена.</p>
+
+    <ConfirmDialog
+      v-if="canEdit && confirmation === 'cancel'"
+      message="Отменить редактирование? Несохранённые изменения будут потеряны."
+      @confirm="cancelEditing"
+      @cancel="confirmation = undefined"
+    />
+    <ConfirmDialog
+      v-else-if="canEdit && confirmation === 'delete'"
+      message="Удалить заметку? Это действие нельзя отменить."
+      confirm-label="Удалить"
+      confirm-variant="danger"
+      @confirm="removeNote"
+      @cancel="confirmation = undefined"
+    />
   </section>
 </template>
-
-<script setup lang="ts">
-  import type { Note as NoteData, NoteItem } from '~/types/note'
-  import BaseButton from '~/components/UI/buttons/BaseButton.vue'
-  import BaseCheckbox from '~/components/UI/checkboxes/BaseCheckbox.vue'
-  import { LeftIcon, PlusIcon, RightIcon, TrashIcon } from '~/components/UI/icons'
-  import BaseInput from '~/components/UI/inputs/BaseInput.vue'
-  import { useUndoRedo } from '~/composables/useUndoRedo'
-
-  const route = useRoute()
-  const isNew = route.params.id === 'new'
-  const { current, change, record, undo, redo, disabledUndo, disabledRedo } =
-    useUndoRedo<NoteData>({
-      id: route.params.id as string,
-      title: isNew ? '' : 'Подготовка к интервью',
-      tasks: isNew
-        ? []
-        : [
-            { id: 'task-1', text: 'Повторить Vue', isDone: true },
-            { id: 'task-2', text: 'Продумать историю', isDone: false },
-            { id: 'task-3', text: 'Проверить Docker', isDone: false },
-          ],
-    })
-
-  const textEdit = ref<{
-    target: object
-    original: string
-    read: () => string
-    write: (text: string) => void
-  }>()
-
-  const pendingText = computed(
-    () => textEdit.value?.read() !== textEdit.value?.original,
-  )
-
-  const commitText = () => {
-    const edit = textEdit.value
-    textEdit.value = undefined
-    if (!edit) return
-
-    const { read, write, original } = edit
-    const text = read()
-    if (text === original) return
-
-    record({
-      undo: () => write(original),
-      redo: () => write(text),
-    })
-  }
-
-  const editText = <Field extends 'title' | 'text'>(
-    target: Record<Field, string>,
-    key: Field,
-    text: string,
-  ) => {
-    if (textEdit.value?.target !== target) {
-      commitText()
-      textEdit.value = {
-        target,
-        original: target[key],
-        read: () => target[key],
-        write: (value) => (target[key] = value),
-      }
-    }
-    target[key] = text
-  }
-
-  const addTask = () => {
-    const task = { id: crypto.randomUUID(), text: '', isDone: false }
-    commitText()
-    change({
-      undo: (note) => note.tasks.pop(),
-      redo: (note) => note.tasks.push(task),
-    })
-  }
-
-  const removeTask = (task: NoteItem) => {
-    const index = current.value.tasks.indexOf(task)
-    if (index === -1) return
-    commitText()
-    change({
-      undo: (note) => note.tasks.splice(index, 0, task),
-      redo: (note) => note.tasks.splice(index, 1),
-    })
-  }
-
-  const changeTaskDone = (task: NoteItem, checked: boolean) => {
-    const { isDone } = task
-    if (checked === isDone) return
-    commitText()
-    change({
-      undo: () => (task.isDone = isDone),
-      redo: () => (task.isDone = checked),
-    })
-  }
-
-  const runHistory = (action: () => void) => {
-    commitText()
-    action()
-  }
-
-  const handleHistoryKey = (event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.isComposing || event.altKey) return
-    if (!event.ctrlKey && !event.metaKey) return
-    if (event.key.toLowerCase() !== 'z' && event.code !== 'KeyZ') return
-
-    event.preventDefault()
-    runHistory(event.shiftKey ? redo : undo)
-  }
-
-  onMounted(() => window.addEventListener('keydown', handleHistoryKey))
-  onBeforeUnmount(() =>
-    window.removeEventListener('keydown', handleHistoryKey),
-  )
-</script>
 
 <style scoped lang="scss">
   .editor-panel {
