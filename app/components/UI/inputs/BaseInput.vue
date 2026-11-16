@@ -1,8 +1,10 @@
 <script setup lang="ts">
   interface Props {
     label: string;
+    name?: string;
     hideLabel?: boolean;
     placeholder?: string;
+    error?: string;
   }
 
   const props = defineProps<Props>();
@@ -22,10 +24,16 @@
     <input
       :placeholder="props.placeholder"
       :id="inputId"
+      :name="props.name"
       v-model="value"
       class="base-input__field"
       type="text"
+      :aria-invalid="props.error ? true : undefined"
+      :aria-describedby="props.error ? `${inputId}-error` : undefined"
     />
+    <p v-if="props.error" :id="`${inputId}-error`" class="base-input__error">
+      {{ props.error }}
+    </p>
   </div>
 </template>
 
@@ -33,11 +41,11 @@
   .base-input {
     display: flex;
     flex-direction: column;
-    gap: 8px;
     min-inline-size: 0;
   }
 
   .base-input__label {
+    margin-block-end: 8px;
     color: var(--color-text);
     font-weight: 500;
     line-height: 1.25;
@@ -68,10 +76,23 @@
     color: var(--input-text-color, var(--color-text));
     text-decoration: var(--input-text-decoration, none);
 
+    &[aria-invalid='true'] {
+      border-color: var(--input-error-color, var(--color-text));
+    }
+
     &:focus {
       outline: 1px solid transparent;
       box-shadow: 0 0 0 3px
         color-mix(in srgb, var(--color-link) 10%, transparent);
     }
+  }
+
+  .base-input__error {
+    margin: 0;
+    margin-block-start: 8px;
+    color: var(--input-error-color, var(--color-text));
+    font-size: 0.875rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
   }
 </style>

@@ -14,6 +14,7 @@
   import { useNotesStore } from '~/stores/notes.ts';
   import type { Note, NoteItem } from '~/types/note';
   import { copyNote } from '~/utils/copyNote.ts';
+  import { createValidator } from '~/utils/validator';
 
   const { params } = useRoute();
   const id = params.id as string;
@@ -23,6 +24,7 @@
   const canEdit = computed(() => isNew || findById(id) !== undefined);
   const confirmation = ref<'cancel' | 'delete'>();
   const actionError = ref('');
+  const hasTriedToSave = ref(false);
   const { current, change, record, undo, redo, disabledUndo, disabledRedo } =
     useUndoRedo<Note>(
       savedNote ? copyNote(savedNote) : { id, title: '', tasks: [] },
@@ -31,6 +33,24 @@
     current,
     () => canEdit.value,
   );
+
+  const taskErrorKey = (taskId: string) => `task:${taskId}`;
+  const errors = computed(() => {
+    const validator = createValidator();
+    if (!hasTriedToSave.value) return validator.errors;
+
+    const { title, tasks } = current.value;
+    validator.required('title', title, 'Введите название заметки');
+    for (const task of tasks) {
+      validator.required(
+        taskErrorKey(task.id),
+        task.text,
+        'Введите текст задачи',
+      );
+    }
+
+    return validator.errors;
+  });
 
   const textEdit = ref<{
     target: object;
@@ -124,8 +144,20 @@
     window.removeEventListener('keydown', handleHistoryKey),
   );
 
-  const submit = () => {
+  const submit = async (event: SubmitEvent) => {
+    const form = event.currentTarget as HTMLFormElement;
     commitText();
+    actionError.value = '';
+    hasTriedToSave.value = true;
+
+    const [firstInvalidField] = Object.keys(errors.value);
+    if (firstInvalidField) {
+      await nextTick();
+      const input = form.elements.namedItem(firstInvalidField);
+      if (input instanceof HTMLInputElement) input.focus();
+      return;
+    }
+
     const result = isNew
       ? createNote({ ...current.value, id: crypto.randomUUID() })
       : updateNote(current.value);
@@ -191,8 +223,10 @@
       <form class="editor-form" @submit.prevent="submit" @focusout="commitText">
         <BaseInput
           :model-value="current.title"
+          name="title"
           label="Название заметки"
           placeholder="НАПРИМЕР ЗАДАЧИ НА ЗАВТРА"
+          :error="errors.title"
           @update:model-value="editText(current, 'title', $event)"
         />
         <div class="editor-form__task-section">
@@ -223,9 +257,12 @@
                       @update:checked="changeTaskDone(task, $event)"
                     />
                     <BaseInput
+                      class="editor-form__task-input"
                       :model-value="task.text"
+                      :name="taskErrorKey(task.id)"
                       label="Текст задачи"
                       placeholder="ТУТ ДОБАВЬ ОПИСАНИЕ ЗАДАЧИ"
+                      :error="errors[taskErrorKey(task.id)]"
                       hide-label
                       @update:model-value="editText(task, 'text', $event)"
                     />
@@ -350,6 +387,7 @@
   }
 
   .editor-form {
+    --input-error-color: var(--editor-danger-accent);
     gap: clamp(20px, 4vw, 32px);
 
     &__task-section {
@@ -400,8 +438,14 @@
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center;
-      gap: clamp(8px, 2vw, 10px);
+      column-gap: clamp(8px, 2vw, 10px);
       padding: 6px 14px;
+    }
+
+    &__task-input {
+      display: grid;
+      grid-area: 1 / 2 / span 2;
+      grid-template-rows: subgrid;
     }
 
     &__task &__remove-task {
