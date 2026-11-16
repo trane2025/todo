@@ -9,6 +9,7 @@
     TrashIcon,
   } from '~/components/UI/icons';
   import BaseInput from '~/components/UI/inputs/BaseInput.vue';
+  import { useNoteDraft } from '~/composables/useNoteDraft';
   import { useUndoRedo } from '~/composables/useUndoRedo';
   import { useNotesStore } from '~/stores/notes.ts';
   import type { Note, NoteItem } from '~/types/note';
@@ -26,6 +27,10 @@
     useUndoRedo<Note>(
       savedNote ? copyNote(savedNote) : { id, title: '', tasks: [] },
     );
+  const { draftToRestore, restoreDraft, finishEditing } = useNoteDraft(
+    current,
+    () => canEdit.value,
+  );
 
   const textEdit = ref<{
     target: object;
@@ -129,11 +134,13 @@
       return;
     }
 
+    finishEditing();
     navigateTo('/');
   };
 
   const cancelEditing = () => {
     confirmation.value = undefined;
+    finishEditing();
     navigateTo('/');
   };
 
@@ -144,6 +151,7 @@
       return;
     }
 
+    finishEditing();
     navigateTo('/');
   };
 </script>
@@ -247,7 +255,15 @@
     <p v-else role="status">Заметка не найдена.</p>
 
     <ConfirmDialog
-      v-if="canEdit && confirmation === 'cancel'"
+      v-if="canEdit && draftToRestore"
+      message="Восстановить черновик? Есть несохранённые изменения."
+      confirm-label="Восстановить"
+      cancel-label="Не сейчас"
+      @confirm="restoreDraft"
+      @cancel="draftToRestore = undefined"
+    />
+    <ConfirmDialog
+      v-else-if="canEdit && confirmation === 'cancel'"
       message="Отменить редактирование? Несохранённые изменения будут потеряны."
       @confirm="cancelEditing"
       @cancel="confirmation = undefined"
