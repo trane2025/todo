@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { Note } from '~/components/Note';
+  import EmptyNotesIllustration from '~/components/EmptyNotesIllustration.vue';
+  import Note from '~/components/Note.vue';
   import ConfirmDialog from '~/components/UI/dialogs/ConfirmDialog.vue';
   import { PlusIcon } from '~/components/UI/icons';
   import { useNotesStore } from '~/stores/notes.ts';
@@ -26,7 +27,7 @@
     <div class="notes-page__toolbar">
       <h1 ref="heading" class="page-title" tabindex="-1">Мои заметки</h1>
 
-      <NuxtLink class="create-note" to="/notes/new">
+      <NuxtLink v-if="store.notes.length" class="create-note" to="/notes/new">
         <PlusIcon />
         Создать заметку
       </NuxtLink>
@@ -36,7 +37,7 @@
       Не удалось удалить заметку из хранилища браузера.
     </p>
 
-    <ul class="notes-list" role="list">
+    <ul v-if="store.notes.length" class="notes-list" role="list">
       <Note
         v-for="note in store.notes"
         :key="note.id"
@@ -44,6 +45,20 @@
         @delete="noteToDelete = note"
       />
     </ul>
+
+    <section v-else class="empty-notes" aria-labelledby="empty-notes-title">
+      <EmptyNotesIllustration class="empty-notes__illustration" />
+
+      <div class="empty-notes__content">
+        <h2 id="empty-notes-title">Ого, у вас ещё нет заметок!</h2>
+        <p>Создайте первую заметку и запишите то, что важно.</p>
+
+        <NuxtLink class="create-note" to="/notes/new">
+          <PlusIcon />
+          Создать заметку
+        </NuxtLink>
+      </div>
+    </section>
 
     <ConfirmDialog
       v-if="noteToDelete"
@@ -73,6 +88,52 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
+  }
+
+  .empty-notes {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(24px, 5vw, 56px);
+    padding: clamp(20px, 5vw, 56px);
+    border: 1px solid var(--color-border);
+    border-radius: 28px;
+    background: var(--color-surface);
+
+    &__illustration {
+      justify-self: center;
+      display: block;
+      inline-size: 100%;
+      max-inline-size: 420px;
+      block-size: auto;
+    }
+
+    &__content {
+      display: grid;
+      justify-items: start;
+      gap: 12px;
+
+      h2 {
+        margin: 0;
+        font-size: clamp(24px, 3.5vw, 38px);
+        font-weight: 750;
+        line-height: 1.12;
+        letter-spacing: -0.035em;
+        text-wrap: balance;
+      }
+
+      p {
+        max-inline-size: 32ch;
+        margin: 0;
+        color: var(--color-muted);
+        font-size: clamp(16px, 2vw, 18px);
+        text-wrap: balance;
+      }
+
+      .create-note {
+        margin-block-start: 10px;
+      }
+    }
   }
 
   .create-note {
@@ -111,6 +172,24 @@
   @media (max-width: 1100px) {
     .notes-list {
       grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .empty-notes {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      padding-block: 16px;
+
+      &__illustration {
+        max-inline-size: clamp(220px, 70vw, 280px);
+      }
+
+      &__content {
+        justify-items: center;
+        gap: 10px;
+        text-align: center;
+      }
     }
   }
 
